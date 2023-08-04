@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -16,6 +17,70 @@ type Book struct {
 	Name      string `json:"name"`
 	CoverUrl  string `json:"coverUrl"`
 	Completed bool   `json:"completed"`
+}
+
+type BooksData struct {
+	Books []Book `json:"books"`
+}
+
+var booksData BooksData
+
+func getNextID() string {
+	if len(booksData.Books) == 0 {
+		return "1"
+	}
+
+	lastID, err := strconv.Atoi(booksData.Books[len(booksData.Books)-1].ID)
+	if err != nil {
+		return "1"
+	}
+
+	nextID := lastID + 1
+	return strconv.Itoa(nextID)
+}
+
+func loadBooksData() error {
+	file, err := os.OpenFile("./data/books.json", os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	if fileInfo.Size() == 0 {
+		booksData = BooksData{
+			Books: []Book{},
+		}
+		return nil
+	}
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&booksData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func saveBooksData() error {
+	file, err := os.Create("./data/books.json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "    ")
+	err = encoder.Encode(booksData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getBooks(writer http.ResponseWriter, request *http.Request) {
@@ -30,7 +95,7 @@ func getBooks(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err = tmpl.ExecuteTemplate(writer, "index.html", books)
+	err = tmpl.ExecuteTemplate(writer, "index.html", booksData)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
@@ -40,7 +105,7 @@ func getBooks(writer http.ResponseWriter, request *http.Request) {
 func getBook(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(request)
-	for _, item := range books {
+	for _, item := range booksData.Books {
 		if item.ID == params["id"] {
 			err := json.NewEncoder(writer).Encode(item)
 			if err != nil {
@@ -53,15 +118,32 @@ func getBook(writer http.ResponseWriter, request *http.Request) {
 
 func createBook(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	var newBook Book
-	err := json.NewDecoder(request.Body).Decode(&newBook)
+
+	err := loadBooksData()
 	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	newBook.ID = strconv.Itoa(len(books) + 1)
-	books = append(books, newBook)
+
+	var newBook Book
+	err = json.NewDecoder(request.Body).Decode(&newBook)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	newBook.ID = getNextID()
+
+	booksData.Books = append(booksData.Books, newBook)
+
+	err = saveBooksData()
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	err = json.NewEncoder(writer).Encode(newBook)
 	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -80,20 +162,24 @@ func completeBook(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(request)
 
-	for i, item := range books {
+	for i, item := range booksData.Books {
 		if item.ID == params["id"] {
 			var newBook Book
 			err := json.NewDecoder(request.Body).Decode(&newBook)
 			if err != nil {
 				return
 			}
-			books[i].Completed = newBook.Completed
-			books = append(books, newBook)
-			err = json.NewEncoder(writer).Encode(newBook)
+			booksData.Books[i].Completed = newBook.Completed
+			err = saveBooksData()
+			if err != nil {
+				http.Error(writer, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = json.NewEncoder(writer).Encode(booksData.Books[i])
 			if err != nil {
 				return
 			}
-			log.Printf("\nComplete book %s, book name: %s, book cover: %s", books[i].ID, books[i].Name, books[i].CoverUrl)
+			log.Printf("\nComplete book %s, book name: %s, book cover: %s", booksData.Books[i].ID, booksData.Books[i].Name, booksData.Books[i].CoverUrl)
 			return
 		}
 	}
@@ -104,15 +190,11 @@ func defaultHandler(writer http.ResponseWriter, request *http.Request) {
 	return
 }
 
-var books []Book
-
 func main() {
-	books = append(books,
-		Book{ID: "1", CoverUrl: "https://i.imgur.com/EZdSNjv.jpeg", Name: "Harry Potter: A Câmera Secreta", Completed: false},
-		Book{ID: "2", CoverUrl: "https://i.imgur.com/BwtS9oD.png", Name: "Teste 2", Completed: true},
-	)
-
-	//fileServer := http.FileServer(http.Dir("./static"))
+	err := loadBooksData()
+	if err != nil {
+		log.Fatal("Erro ao carregar os dados:", err)
+	}
 
 	router := mux.NewRouter()
 
@@ -122,8 +204,7 @@ func main() {
 	router.HandleFunc("/books/{id}", updateBook).Methods("POST")
 	router.HandleFunc("/books/complete/{id}", completeBook).Methods("POST")
 	router.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
-	//router.PathPrefix("/").Handler(fileServer)
-	router.HandleFunc("/", getBooks)
+	router.HandleFunc("/", getBooks).Methods("GET")
 
 	fmt.Printf("Starting listening at localhost:5000")
 

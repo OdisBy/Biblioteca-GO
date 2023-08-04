@@ -9,8 +9,23 @@
         .table-container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh; /* Defina a altura desejada, por exemplo, 100vh ocupa toda a altura da tela */
+            border-bottom: 80px;
+            height: 100vh;
+            vertical-align: top;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        td {
+            border-bottom: 3px solid #ccc;
+            padding: 12px;
+        }
+
+        td:first-child {
+            font-weight: bold;
         }
     </style>
 
@@ -36,14 +51,14 @@
 <div class="table-container">
     <table>
         <tr>
-            <th colspan="3"><h2>Livros</h2></th>
+            <th colspan="3"><h1>Livros</h1></th>
         </tr>
         <tr>
             <th style="width: 350px"><h1>Capa do livro</h1></th>
             <th style="width: 350px"><h1>Título do livro</h1></th>
             <th style="width: 350px"><h1>Completo</h1></th>
         </tr>
-        {{range .}}
+        {{range .Books}}
         <tr>
             <td style="width: 350px; text-align: center">
                 <a href=""
