@@ -82,18 +82,18 @@ func completeBook(writer http.ResponseWriter, request *http.Request) {
 
 	for i, item := range books {
 		if item.ID == params["id"] {
-			books = append(books[:i], books[i+1:]...)
 			var newBook Book
 			err := json.NewDecoder(request.Body).Decode(&newBook)
 			if err != nil {
 				return
 			}
-			newBook.ID = params["id"]
+			books[i].Completed = newBook.Completed
 			books = append(books, newBook)
 			err = json.NewEncoder(writer).Encode(newBook)
 			if err != nil {
 				return
 			}
+			log.Printf("\nComplete book %s, book name: %s, book cover: %s", books[i].ID, books[i].Name, books[i].CoverUrl)
 			return
 		}
 	}

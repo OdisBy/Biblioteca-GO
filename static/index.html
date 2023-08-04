@@ -13,6 +13,24 @@
             height: 100vh; /* Defina a altura desejada, por exemplo, 100vh ocupa toda a altura da tela */
         }
     </style>
+
+    <script>
+        function toggleCompleted(id, checkbox) {
+            fetch(`/books/complete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ completed: checkbox.checked })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Aqui você pode tratar a resposta do servidor, se necessário
+                    console.log(data);
+                })
+                .catch(error => console.error('Erro:', error));
+        }
+    </script>
 </head>
 <body>
 <div class="table-container">
@@ -41,10 +59,14 @@
             <td style="width: 350px; text-align: center">
                 <h2>{{.Name}}</h2>
             </td>
-            <td style="width: 350px; text-align: center">{{.Completed}}</td>
+            <td style="width: 350px; text-align: center">
+                <input type="checkbox" id="{{.ID}}" {{if .Completed}}checked{{end}} onclick="toggleCompleted('{{.ID}}', this)">
+                <label for="{{.ID}}"></label>
+            </td>
         </tr>
         {{end}}
     </table>
 </div>
 </body>
+
 </html>
