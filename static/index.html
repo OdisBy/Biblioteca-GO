@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+
+    <style>
+        /* Estilo para centralizar o container */
+        .table-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Defina a altura desejada, por exemplo, 100vh ocupa toda a altura da tela */
+        }
+    </style>
+</head>
+<body>
+<div class="table-container">
+    <table>
+        <tr>
+            <th colspan="3"><h2>Livros</h2></th>
+        </tr>
+        <tr>
+            <th style="width: 350px"><h1>Capa do livro</h1></th>
+            <th style="width: 350px"><h1>Título do livro</h1></th>
+            <th style="width: 350px"><h1>Completo</h1></th>
+        </tr>
+        {{range .}}
+        <tr>
+            <td style="width: 350px; text-align: center">
+                <a href=""
+                   target="_blank">
+                    <img src="{{.CoverUrl}}"
+                         width="300"
+                         height="425"
+                         alt="Capa do livro"
+                         style="border:1px solid black;"
+                    />
+                </a>
+            </td>
+            <td style="width: 350px; text-align: center">
+                <h2>{{.Name}}</h2>
+            </td>
+            <td style="width: 350px; text-align: center">{{.Completed}}</td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+</body>
+</html>
