@@ -1,4 +1,4 @@
-module books-read-go
+module Biblioteca-GO
 
 go 1.20
 
