@@ -10,11 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type Book struct {
 	ID        string `json:"id"`
-	Name      string `json:"name"`
+	Title     string `json:"title"`
 	CoverUrl  string `json:"coverUrl"`
 	Completed bool   `json:"completed"`
 }
@@ -179,9 +180,31 @@ func completeBook(writer http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				return
 			}
-			log.Printf("\nComplete book %s, book name: %s, book cover: %s", booksData.Books[i].ID, booksData.Books[i].Name, booksData.Books[i].CoverUrl)
+			log.Printf("\nComplete book %s, book name: %s, book cover: %s", booksData.Books[i].ID, booksData.Books[i].Title, booksData.Books[i].CoverUrl)
 			return
 		}
+	}
+}
+
+func searchBookHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(request)
+
+	nameRequest := params["string"]
+
+	var results []Book
+
+	if len(nameRequest) >= 3 {
+		for _, book := range booksData.Books {
+			if strings.Contains(strings.ToLower(book.Title), strings.ToLower(nameRequest)) {
+				results = append(results, book)
+			}
+		}
+	}
+
+	err := json.NewEncoder(writer).Encode(results)
+	if err != nil {
+		return
 	}
 }
 
@@ -204,6 +227,7 @@ func main() {
 	router.HandleFunc("/books/{id}", updateBook).Methods("POST")
 	router.HandleFunc("/books/complete/{id}", completeBook).Methods("POST")
 	router.HandleFunc("/books/{id}", deleteBook).Methods("DELETE")
+	router.HandleFunc("/search/{string}", searchBookHandler).Methods("GET")
 	router.HandleFunc("/", getBooks).Methods("GET")
 
 	fmt.Printf("Starting listening at localhost:5000")
