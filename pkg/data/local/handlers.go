@@ -2,6 +2,7 @@ package local
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
@@ -57,15 +58,23 @@ func GetBook(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(request)
+	var result Book
+
 	for _, item := range localBooksData.Books {
 		if item.ID == params["id"] {
-			err := json.NewEncoder(writer).Encode(item)
-			if err != nil {
+			result = item
+			if result.ID != "" {
+				err := json.NewEncoder(writer).Encode(item)
+				if err != nil {
+					http.Error(writer, err.Error(), http.StatusNotFound)
+					return
+				}
 				return
 			}
-			return
 		}
 	}
+
+	fmt.Println(result.ID)
 }
 
 func CreateBook(writer http.ResponseWriter, request *http.Request) {

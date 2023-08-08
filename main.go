@@ -12,8 +12,10 @@ import (
 func main() {
 	router := mux.NewRouter()
 
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+
 	router.HandleFunc("/books", local.GetBooks).Methods("GET")
-	router.HandleFunc("/book/{id}", local.GetBooks).Methods("GET")
+	router.HandleFunc("/book/{id}", remote.GetBookInfo).Methods("GET")
 	router.HandleFunc("/book", local.CreateBook).Methods("POST")
 	router.HandleFunc("/book/{id}", local.UpdateBook).Methods("POST")
 	router.HandleFunc("/book/complete/{id}", local.CompleteBook).Methods("POST")

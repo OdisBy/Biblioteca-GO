@@ -21,11 +21,16 @@ type SearchVolumeInfo struct {
 }
 
 type VolumeInfo struct {
-	Title         string   `json:"title"`
-	Authors       []string `json:"authors"`
-	PublishedDate string   `json:"publishedDate"`
-	Description   string   `json:"description"`
-	PageCount     int      `json:"pageCount"`
-	Categories    []string `json:"categories"`
-	Completed     bool     `json:"completed"`
+	Title         string     `json:"title"`
+	Authors       []string   `json:"authors"`
+	PublishedDate string     `json:"publishedDate"`
+	Description   string     `json:"description"`
+	PageCount     int        `json:"pageCount"`
+	Categories    []string   `json:"categories"`
+	ImageLinks    ImageLinks `json:"imageLinks"`
+	Completed     bool       `json:"completed"`
+}
+
+type ImageLinks struct {
+	Small string `json:"thumbnail"`
 }

@@ -28,11 +28,6 @@
             max-width: 70%;
             padding: 20px;
         }
-        img {
-            max-width: 300px;
-            height: 425px;
-            margin-right: 20px;
-        }
         .content {
             flex: 1;
             margin: 30px;
@@ -54,23 +49,45 @@
             margin-bottom: 10px;
         }
     </style>
+
+<!--    <script>-->
+<!--        var descriptionText = "{{.VolumeInfo.Description}}";-->
+
+<!--        // Encontre o elemento onde você deseja renderizar a descrição-->
+<!--        var descriptionContainr = document.getElementById("description");-->
+
+<!--        // Use innerHTML para injetar o HTML da descrição no elemento-->
+<!--        descriptionContainr.innerHTML = descriptionText;-->
+<!--    </script>-->
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var description = "{{.VolumeInfo.Description}}";
+
+            var descriptionContainer = document.getElementById("description");
+
+            if (descriptionContainer) {
+                descriptionContainer.innerHTML = description;
+            }
+        });
+    </script>
+
 </head>
 <body>
     <div class="navbar">
         <a href="#">Biblioteca Go</a>
     </div>
     <section>
-        <img src="harry_capa.jpg" alt="Capa do Livro">
+        <img src="{{.VolumeInfo.ImageLinks.Small}}"
+             width="300"
+             height="425"
+             alt="Capa do Livro"/>
         <div class="content">
-            <h2>Harry Potter e a Ordem da Fênix</h2>
-            <p>Harry não é mais um garoto. Aos 15 anos, continua sofrendo a rejeição dos Dursdley, sua estranhíssima família no mundo dos 'trouxas', ou seja, todos os que não são bruxos. Também continua contando com Rony Weasley e Hermione Granger, seus melhores amigos em Hogwarts, para levar adiante suas investigações e aventuras. Mas o bruxinho começa a sentir e descobrir coisas novas, como o primeiro amor e a sexualidade. Nos volumes anteriores, J. K. Rowling mostrou como Harry foi transformado em celebridade no mundo da magia por ter derrotado, ainda bebê, Voldemort, o todo-poderoso bruxo das trevas que assassinou seus pais. Neste quinto livro da saga, o protagonista, numa crise típica da adolescência, tem ataques de mau humor com a perseguição da imprensa, que o segue por todos os lugares e chega a inventar declarações que nunca deu. Harry vai enfrentar as investidas de Voldemort sem a proteção de Dumbledore, já que o diretor de Hogwarts é afastado da escola. E vai ser sem a ajuda de seu protetor que o jovem herói enfrentará descobertas sobre a personalidade controversa de seu pai, Tiago Potter, e a morte de alguém muito próximo.</p>
+            <h2>{{.VolumeInfo.Title}}</h2>
+            <div id="description"></div>
         </div>
         <div class="buttons">
-            <p>
-                <strong>Concluído:</strong>
-                <input type="checkbox" id="{{.ID}}" {{if .Completed}}checked{{end}} onclick="toggleCompleted('{{.ID}}', this)">
-                <label for="{{.ID}}"></label>
-            </p>
             <button onclick="removerLivro()">Remover Livro</button>
             <button onclick="editarLivro()">Editar Livro</button>
         </div>
